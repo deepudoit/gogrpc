@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net"
+	"context"
 
 	"github.com/deepudoit/coolgo/gogrpc/greet/greetpb"
 	"google.golang.org/grpc"
@@ -10,6 +11,18 @@ import (
 
 type server struct {
 	
+}
+
+func (s *server) Greet(ctx context.Context, r *greetpb.GreetRequest) (*greetpb.GreetResponse, error) {
+	firstName := r.GetGreeting().GetFirstName()
+	lastName := r.GetGreeting().GetLastName()
+	res := "Welcome... " + firstName + ", " + lastName
+
+	response := &greetpb.GreetResponse{
+		Result: res,
+	} 
+
+	return response, nil
 }
 
 func main() {
@@ -25,4 +38,3 @@ func main() {
 		log.Fatalf("Failed to serve..%v", err)
 	}
 }
-
