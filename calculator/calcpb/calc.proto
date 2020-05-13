@@ -13,7 +13,27 @@ message SumResponse {
     int32 sum_result = 1;
 }
 
+message PrimeNumDecomReq {
+    int64 num = 1;
+}
+
+message PrimNumDecomRes {
+    int64 prime_factor = 1;
+}
+
+message ComputeAvgReq {
+    int32 num = 1;
+}
+
+message ComputeAvgRes {
+    double avg = 1;
+}
+
 service CalculatorService {
     rpc Sum (SumRequest) returns (SumResponse) {};
+
+    rpc PrimeNumDecom (PrimeNumDecomReq) returns (stream PrimNumDecomRes);
+
+    rpc ComputeAvg (stream ComputeAvgReq) returns (ComputeAvgRes);
 }
 

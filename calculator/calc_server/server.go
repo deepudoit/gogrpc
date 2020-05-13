@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"log"
 	"net"
 
@@ -18,6 +20,42 @@ func (s *server) Sum(ctx context.Context, r *calcpb.SumRequest) (*calcpb.SumResp
 		SumResult: result,
 	}
 	return res, nil
+}
+
+func (*server) PrimeNumDecom(req *calcpb.PrimeNumDecomReq, stream calcpb.CalculatorService_PrimeNumDecomServer) error {
+	num := req.GetNum()
+	divisor := int64(2)
+	for num > 1 {
+		if num%divisor == 0 {
+			stream.Send(&calcpb.PrimNumDecomRes{
+				PrimeFactor: divisor,
+			})
+			num /= divisor
+		} else {
+			divisor++
+			fmt.Printf("Divisor has increased: %v\n", divisor)
+		}
+	}
+	return nil
+}
+
+func (*server) ComputeAvg(stream calcpb.CalculatorService_ComputeAvgServer) error {
+	var sum int32 = 0
+	count := 0
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			log.Println("Finished reading server stream")
+			return stream.SendAndClose(&calcpb.ComputeAvgRes{
+				Avg: float64(sum) / float64(count),
+			})
+		}
+		if err != nil {
+			log.Fatalf("Failed to server stream requests: %v", err)
+		}
+		sum += req.GetNum()
+		count++
+	}
 }
 
 func main() {
