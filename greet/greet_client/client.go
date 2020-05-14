@@ -21,7 +21,8 @@ func main() {
 	c := greetpb.NewGreetServiceClient(cc)
 	// doUnary(c)
 	// doServerStream(c)
-	doClientStream(c)
+	// doClientStream(c)
+	doBiDiStream(c)
 }
 
 func doUnary(c greetpb.GreetServiceClient) {
@@ -107,4 +108,64 @@ func doClientStream(c greetpb.GreetServiceClient) {
 		log.Fatalf("Error in receiving stream: %v", err)
 	}
 	log.Printf("Server final msg: %v", res.Result)
+}
+
+func doBiDiStream(c greetpb.GreetServiceClient) {
+
+	requests := []*greetpb.GreetEveReq{
+		{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Apollo",
+			},
+		},
+		{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Endurance",
+			},
+		},
+		{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Gargantua",
+			},
+		},
+		{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Do not go gentle into that good nite......",
+			},
+		},
+	}
+	msgStream, err := c.GreetEveryone(context.Background())
+	if err != nil {
+		log.Fatalf("Failed to get the connection: %v", err)
+	}
+
+	waitc := make(chan struct{})
+
+	go func() {
+		for _, req := range requests {
+			log.Println("Sending....")
+			msgStream.SendMsg(req)
+			// time.Sleep(time.Millisecond * 200)
+		}
+		msgStream.CloseSend()
+		log.Println("Sent all we got...Now waiting to get...")
+	}()
+
+	go func() {
+		for {
+			time.Sleep(time.Second * 3)
+			msg, err := msgStream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Fatalf("Failed to get response from stream: %v", err)
+				break
+			}
+			log.Printf("Hurray, receiving...%v\n", msg.Result)
+		}
+		close(waitc)
+	}()
+
+	<-waitc
 }

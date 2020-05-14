@@ -58,6 +58,30 @@ func (*server) LongGreet(stream greetpb.GreetService_LongGreetServer) error {
 	}
 }
 
+func (*server) GreetEveryone(stream greetpb.GreetService_GreetEveryoneServer) error {
+	result := ""
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			log.Fatalf("Failed to connect to stream: %v", err)
+			return err
+		}
+		time.Sleep(time.Second * 2)
+		log.Println("From Voyager...")
+		firstname := req.GetGreeting().GetFirstName()
+		result += ">>>>" + firstname + ".......\n"
+		err = stream.Send(&greetpb.GreetEveRes{
+			Result: firstname,
+		})
+		if err != nil {
+			log.Fatalf("Failed to send response: %v", err)
+		}
+	}
+}
+
 func main() {
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {

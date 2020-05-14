@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net"
 
 	"github.com/deepudoit/coolgo/gogrpc/calculator/calcpb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type server struct {
@@ -56,6 +59,18 @@ func (*server) ComputeAvg(stream calcpb.CalculatorService_ComputeAvgServer) erro
 		sum += req.GetNum()
 		count++
 	}
+}
+
+func (*server) SquareRoot(ctx context.Context, req *calcpb.SquareRootReq) (*calcpb.SquareRootRes, error) {
+	num := req.GetNum()
+	log.Printf("Num from client: %v", num)
+	if num < 0 {
+		return nil, status.Errorf(codes.InvalidArgument,
+			fmt.Sprintf("GRPC_ERR00012: Invalid num %v", num))
+	}
+	return &calcpb.SquareRootRes{
+		Result: math.Sqrt(float64(num)),
+	}, nil
 }
 
 func main() {

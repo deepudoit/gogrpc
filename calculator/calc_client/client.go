@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"time"
 
 	"github.com/deepudoit/coolgo/gogrpc/calculator/calcpb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 )
 
 func main() {
@@ -23,7 +25,8 @@ func main() {
 
 	// doUnary(c)
 	// doServerStream(c)
-	doClientStream(c)
+	//doClientStream(c)
+	doSqrt(c)
 }
 
 func doUnary(c calcpb.CalculatorServiceClient) {
@@ -103,4 +106,26 @@ func doClientStream(c calcpb.CalculatorServiceClient) {
 		log.Fatalf("Error in receiving from stream: %v", err)
 	}
 	log.Printf("Average : %.2f", res.Avg)
+}
+
+func doSqrt(c calcpb.CalculatorServiceClient) {
+	//Correct call
+	doErrSqrt(c, -10)
+
+	//Error call
+	doErrSqrt(c, -4)
+}
+
+func doErrSqrt(c calcpb.CalculatorServiceClient, num int32) {
+	res, err := c.SquareRoot(context.Background(), &calcpb.SquareRootReq{Num: num})
+
+	if err != nil {
+		if gErr, ok := status.FromError(err); ok {
+			fmt.Printf("%v\n", gErr.Message())
+			return
+		}
+		log.Fatalf("Falied to call remote method: %v", err)
+		return
+	}
+	log.Printf("Here's the sqrt of %d: %.2f\n", num, res.GetResult())
 }

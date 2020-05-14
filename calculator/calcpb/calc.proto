@@ -29,11 +29,22 @@ message ComputeAvgRes {
     double avg = 1;
 }
 
+message SquareRootReq {
+    int32 num = 1;
+}
+
+message SquareRootRes {
+    double result = 1;
+}
+
 service CalculatorService {
     rpc Sum (SumRequest) returns (SumResponse) {};
 
     rpc PrimeNumDecom (PrimeNumDecomReq) returns (stream PrimNumDecomRes);
 
     rpc ComputeAvg (stream ComputeAvgReq) returns (ComputeAvgRes);
+
+    //Error handling
+    rpc SquareRoot (SquareRootReq) returns (SquareRootRes);
 }
 

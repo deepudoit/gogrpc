@@ -31,12 +31,22 @@ message LongGreetRes {
     string result = 1;
 }
 
+message GreetEveReq {
+    Greeting greeting = 1;
+}
+
+message GreetEveRes {
+    string result = 1;
+}
+
 service GreetService{
     rpc Greet (GreetRequest) returns (GreetResponse) {};
 
     rpc GreeManyTimes (GreetManyTimesRequest) returns (stream GreetManyTimesResponse);
 
     rpc LongGreet (stream LongGreetReq) returns (LongGreetRes);
+
+    rpc GreetEveryone (stream GreetEveReq) returns (stream GreetEveRes);
 }
 
  
