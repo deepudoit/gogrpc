@@ -39,6 +39,14 @@ message GreetEveRes {
     string result = 1;
 }
 
+message GreetDeadlineReq {
+    Greeting greeting = 1;
+}
+
+message GreetDeadlineRes {
+    string result = 1;
+}
+
 service GreetService{
     rpc Greet (GreetRequest) returns (GreetResponse) {};
 
@@ -47,6 +55,8 @@ service GreetService{
     rpc LongGreet (stream LongGreetReq) returns (LongGreetRes);
 
     rpc GreetEveryone (stream GreetEveReq) returns (stream GreetEveRes);
+
+    rpc GreetDeadline (GreetDeadlineReq) returns (GreetDeadlineRes);
 }
 
  

@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"time"
 
 	"github.com/deepudoit/coolgo/gogrpc/greet/greetpb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func main() {
@@ -22,7 +25,9 @@ func main() {
 	// doUnary(c)
 	// doServerStream(c)
 	// doClientStream(c)
-	doBiDiStream(c)
+	// doBiDiStream(c)
+	doDeadLine(c, 5*time.Second)
+	doDeadLine(c, 1*time.Second)
 }
 
 func doUnary(c greetpb.GreetServiceClient) {
@@ -168,4 +173,30 @@ func doBiDiStream(c greetpb.GreetServiceClient) {
 	}()
 
 	<-waitc
+}
+
+func doDeadLine(c greetpb.GreetServiceClient, timeout time.Duration) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	req := &greetpb.GreetDeadlineReq{
+		Greeting: &greetpb.Greeting{
+			FirstName: "Pradeep",
+			LastName:  "CloudDev",
+		},
+	}
+	res, err := c.GreetDeadline(ctx, req)
+	if err != nil {
+		stsErr, ok := status.FromError(err)
+		if ok {
+			if stsErr.Code() == codes.DeadlineExceeded {
+				fmt.Println("Timeout.....Deadline exceeded")
+			} else {
+				fmt.Printf("Another unexpected gRPC error: %v", stsErr)
+			}
+		} else {
+			log.Fatalf("Failed to get response from server: %v", err)
+		}
+		return
+	}
+	log.Printf("Response :%v", res.Result)
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -10,6 +11,8 @@ import (
 
 	"github.com/deepudoit/coolgo/gogrpc/greet/greetpb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type server struct {
@@ -80,6 +83,24 @@ func (*server) GreetEveryone(stream greetpb.GreetService_GreetEveryoneServer) er
 			log.Fatalf("Failed to send response: %v", err)
 		}
 	}
+}
+
+func (*server) GreetDeadline(ctx context.Context, r *greetpb.GreetDeadlineReq) (*greetpb.GreetDeadlineRes, error) {
+	for i := 0; i < 3; i++ {
+		time.Sleep(1 * time.Second)
+		if ctx.Err() == context.Canceled {
+			fmt.Println("Client cancelled the request")
+			return nil, status.Errorf(codes.Canceled, "Request was cancelled by client")
+		}
+	}
+	firstName := r.GetGreeting().GetFirstName()
+	lastName := r.GetGreeting().GetLastName()
+	res := "Welcome... " + firstName + ", " + lastName
+
+	response := &greetpb.GreetDeadlineRes{
+		Result: res,
+	}
+	return response, nil
 }
 
 func main() {
