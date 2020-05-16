@@ -107,7 +107,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
-	opts := []grpc.ServerOption{}
+	var opts []grpc.ServerOption
 	s := grpc.NewServer(opts...)
 	blogpb.RegisterBlogServiceServer(s, &server{})
 	//Graceful shutdown of server and listener on Ctrl+C
