@@ -10,24 +10,30 @@ import (
 	"github.com/deepudoit/coolgo/gogrpc/greet/greetpb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 )
 
 func main() {
-	cc, err := grpc.Dial(":50051", grpc.WithInsecure())
+	certFile := "./ssl/ca.crt"
+	creds, sslErr := credentials.NewClientTLSFromFile(certFile, "")
+	if sslErr != nil {
+		log.Fatalf("Failed to access SSL certs: %v", sslErr)
+	}
+	opts := grpc.WithTransportCredentials(creds)
+	cc, err := grpc.Dial(":50051", opts)
 
 	if err != nil {
 		log.Fatalf("Could not connect..%v", err)
 	}
 	defer cc.Close()
-
 	c := greetpb.NewGreetServiceClient(cc)
-	// doUnary(c)
+	doUnary(c)
 	// doServerStream(c)
 	// doClientStream(c)
 	// doBiDiStream(c)
-	doDeadLine(c, 5*time.Second)
-	doDeadLine(c, 1*time.Second)
+	// doDeadLine(c, 5*time.Second)
+	// doDeadLine(c, 1*time.Second)
 }
 
 func doUnary(c greetpb.GreetServiceClient) {
