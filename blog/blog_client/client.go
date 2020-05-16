@@ -26,6 +26,18 @@ func main() {
 		fmt.Printf("Error reading blog posts: %s\n", err)
 	}
 	fmt.Printf("Blog : %v", res.GetBlog())
+
+	updBlog := &blogpb.Blog{
+		Id:      blogID,
+		Author:  "Pradeep",
+		Title:   "Learn Do Learn",
+		Content: "Focus and work hard",
+	}
+	updRes, err := c.UpdateBlog(context.Background(), &blogpb.UpdateBlogReq{Blog: updBlog})
+	if err != nil {
+		log.Fatalf("Failed to udoate the blog: %v", err)
+	}
+	fmt.Printf("Updated blog post: %v", updRes.GetBlog())
 }
 
 func doCreateBlog(c blogpb.BlogServiceClient) string {

@@ -33,7 +33,6 @@ type blogItem struct {
 	Content string             `bson:"content"`
 }
 
-
 func (*server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogReq) (*blogpb.CreateBlogRes, error) {
 	blog := req.GetBlog()
 	data := blogItem{
@@ -75,14 +74,47 @@ func (*server) ReadBlog(ctx context.Context, req *blogpb.ReadBlogReq) (*blogpb.R
 		}
 	}
 	res := &blogpb.ReadBlogRes{
-		Blog: &blogpb.Blog{
-			Id: data.ID.Hex(),
-			Author: data.Author,
-			Title: data.Title,
-			Content: data.Content,
-		},
+		Blog: data2blog(data),
 	}
 	return res, nil
+}
+
+func data2blog(data *blogItem) *blogpb.Blog {
+	return &blogpb.Blog{
+		Id:      data.ID.Hex(),
+		Author:  data.Author,
+		Title:   data.Title,
+		Content: data.Content,
+	}
+}
+
+func (*server) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogReq) (*blogpb.UpdateBlogRes, error) {
+	fmt.Println("Update blog post...")
+	blog := req.GetBlog()
+	oid, err := primitive.ObjectIDFromHex(blog.GetId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Cannot parse ID: %v", err))
+	}
+
+	data := &blogItem{}
+	result := coll.FindOne(context.TODO(), bson.D{{"_id", oid}})
+	if err := result.Decode(data); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, status.Errorf(codes.NotFound, fmt.Sprintf("No documents with the blog ID: %v", oid))
+		}
+	}
+
+	data.Author = blog.GetAuthor()
+	data.Title = blog.GetTitle()
+	data.Content = blog.GetContent()
+
+	_, updErr := coll.ReplaceOne(context.TODO(), bson.D{{"_id", oid}}, data)
+	if updErr != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("Cannot udpate blog: %v", updErr))
+	}
+	return &blogpb.UpdateBlogRes{
+		Blog: data2blog(data),
+	}, nil
 }
 
 func main() {

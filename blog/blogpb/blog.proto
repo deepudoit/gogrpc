@@ -26,7 +26,16 @@ message ReadBlogRes {
     Blog blog = 1;
 }
 
+message UpdateBlogReq {
+    Blog blog = 1;
+}
+
+message UpdateBlogRes {
+    Blog blog = 1;
+}
+
 service BlogService {
     rpc CreateBlog (CreateBlogReq) returns (CreateBlogRes);
     rpc ReadBlog (ReadBlogReq) returns (ReadBlogRes);
+    rpc UpdateBlog (UpdateBlogReq) returns (UpdateBlogRes);
 }
